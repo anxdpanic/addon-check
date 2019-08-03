@@ -81,7 +81,7 @@ def main():
     args = parser.parse_args()
 
     log_file_name = os.path.join(os.getcwd(), "kodi-addon-checker.log")
-    Logger.create_logger(log_file_name, __package__, args.enable_debug_log)
+    Logger(__package__, log_file_name, args.enable_debug_log).create_logger()
 
     all_repo_addons = check_addon.get_all_repo_addons()
 

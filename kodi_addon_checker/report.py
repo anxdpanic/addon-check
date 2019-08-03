@@ -40,3 +40,14 @@ class Report():
             self.problem_count += report.problem_count
             self.warning_count += report.warning_count
             self.information_count += report.information_count
+
+    def __str__(self):
+        """
+        :return: text representation of reported records
+        """
+        if self.artifact_name:
+            return "Reports for %s: Problem [%d], Warning [%d], Information [%d]" % \
+                   (self.artifact_name, self.problem_count, self.warning_count, self.information_count)
+
+        return "Reports: Problem [%d], Warning [%d], Information [%d]" % \
+               (self.problem_count, self.warning_count, self.information_count)
