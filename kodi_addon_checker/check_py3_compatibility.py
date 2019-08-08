@@ -10,7 +10,7 @@ import difflib
 from lib2to3 import pgen2, refactor
 
 from .common import relative_path
-from .KodiVersion import KodiVersion
+from .kodi_version import KodiVersion
 from .record import INFORMATION, PROBLEM, Record
 from .report import Report
 
@@ -62,19 +62,19 @@ def check_py3_compatibility(report: Report, path: str, kodi_version: KodiVersion
 
     fixer_names = ['lib2to3.fixes.fix_' + fix for fix in list_of_fixes]
 
-    rt = KodiRefactoringTool(report, PROBLEM, fixer_names, options={"print_function": True}, explicit=None)
+    refactor_tool = KodiRefactoringTool(report, PROBLEM, fixer_names, options={"print_function": True}, explicit=None)
     try:
-        rt.refactor([path])
-    except pgen2.parse.ParseError as e:
-        rt = KodiRefactoringTool(report, PROBLEM, fixer_names, options=None, explicit=None)
+        refactor_tool.refactor([path])
+    except pgen2.parse.ParseError as exc:
+        refactor_tool = KodiRefactoringTool(report, PROBLEM, fixer_names, options=None, explicit=None)
         try:
-            rt.refactor([path])
-        except pgen2.parse.ParseError as e:
-            report.add(Record(PROBLEM, "ParseError: {}".format(e)))
-        except UnicodeDecodeError as e:
-            report.add(Record(PROBLEM, "UnicodeDecodeError: {}".format(e)))
-    except UnicodeDecodeError as e:
-        report.add(Record(PROBLEM, "UnicodeDecodeError: {}".format(e)))
+            refactor_tool.refactor([path])
+        except pgen2.parse.ParseError as exc:
+            report.add(Record(PROBLEM, "ParseError: {}".format(exc)))
+        except UnicodeDecodeError as exc:
+            report.add(Record(PROBLEM, "UnicodeDecodeError: {}".format(exc)))
+    except UnicodeDecodeError as exc:
+        report.add(Record(PROBLEM, "UnicodeDecodeError: {}".format(exc)))
 
     if kodi_version >= KodiVersion("krypton"):
         list_of_fixes = [
@@ -94,16 +94,17 @@ def check_py3_compatibility(report: Report, path: str, kodi_version: KodiVersion
 
         fixer_names = ['lib2to3.fixes.fix_' + fix for fix in list_of_fixes]
 
-        rt = KodiRefactoringTool(report, INFORMATION, fixer_names, options={"print_function": True}, explicit=None)
+        refactor_tool = KodiRefactoringTool(report, INFORMATION, fixer_names,
+                                            options={"print_function": True}, explicit=None)
         try:
-            rt.refactor([path])
-        except pgen2.parse.ParseError as e:
-            rt = KodiRefactoringTool(report, INFORMATION, fixer_names, options=None, explicit=None)
+            refactor_tool.refactor([path])
+        except pgen2.parse.ParseError as exc:
+            refactor_tool = KodiRefactoringTool(report, INFORMATION, fixer_names, options=None, explicit=None)
             try:
-                rt.refactor([path])
-            except pgen2.parse.ParseError as e:
-                report.add(Record(INFORMATION, "ParseError: {}".format(e)))
-            except UnicodeDecodeError as e:
-                report.add(Record(PROBLEM, "UnicodeDecodeError: {}".format(e)))
-        except UnicodeDecodeError as e:
-            report.add(Record(PROBLEM, "UnicodeDecodeError: {}".format(e)))
+                refactor_tool.refactor([path])
+            except pgen2.parse.ParseError as exc:
+                report.add(Record(INFORMATION, "ParseError: {}".format(exc)))
+            except UnicodeDecodeError as exc:
+                report.add(Record(PROBLEM, "UnicodeDecodeError: {}".format(exc)))
+        except UnicodeDecodeError as exc:
+            report.add(Record(PROBLEM, "UnicodeDecodeError: {}".format(exc)))

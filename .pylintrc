@@ -23,7 +23,6 @@ disable=import-error,
         no-name-in-module,
 
         missing-docstring,
-        invalid-name,
         useless-else-on-loop,
         too-many-nested-blocks,
 

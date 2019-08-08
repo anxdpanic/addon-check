@@ -27,7 +27,7 @@ class TestCheckFilePermission(unittest.TestCase):
             .format(path=relative_path(join(path, "file_permission.py")))
         file_index = create_file_index(path)
         check_file_permission(self.report, file_index)
-        records = [Record.__str__(r) for r in ReportManager.getEnabledReporters()[0].reports]
+        records = [Record.__str__(r) for r in ReportManager.get_enabled_reporters()[0].reports]
         flag = any(s == string for s in records)
         self.assertTrue(flag)
 

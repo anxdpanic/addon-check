@@ -17,7 +17,7 @@ class ConsoleReporter(Reporter):
     """
 
     @staticmethod
-    def colorPrint(string, color):
+    def color_print(string, color):
         """
         Utility function to print message to console.
         :param string: the message to print
@@ -29,11 +29,11 @@ class ConsoleReporter(Reporter):
     def report(self, report):
         if isinstance(report, Record):
             if report.log_level == INFORMATION:
-                self.colorPrint(report, "34")
+                self.color_print(report, "34")
             elif report.log_level == WARNING:
-                self.colorPrint(report, "35")
+                self.color_print(report, "35")
             elif report.log_level == PROBLEM:
-                self.colorPrint(report, "31")
+                self.color_print(report, "31")
         else:
             for rep in report:
                 self.report(rep)

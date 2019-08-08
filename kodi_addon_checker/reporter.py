@@ -91,7 +91,7 @@ class ReportManager():
             clazz.enabled = name in names
 
     @classmethod
-    def getEnabledReporters(cls):
+    def get_enabled_reporters(cls):
         return [reporter for reporter in cls.reporters.values() if reporter.enabled]
 
 

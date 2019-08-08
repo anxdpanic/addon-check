@@ -9,12 +9,12 @@
 import logging
 from distutils.version import LooseVersion
 
-from .addons.Addon import Addon
-from .KodiVersion import KodiVersion
+from .addons.addon import Addon
+from .kodi_version import KodiVersion
 from .record import INFORMATION, PROBLEM, WARNING, Record
 from .report import Report
 
-common_ignore_deps = ['xbmc.metadata.scraper.albums', 'xbmc.metadata.scraper.movies',
+COMMON_IGNORE_DEPS = ['xbmc.metadata.scraper.albums', 'xbmc.metadata.scraper.movies',
                       'xbmc.metadata.scraper.musicvideos', 'xbmc.metadata.scraper.tvshows',
                       'xbmc.metadata.scraper.library', 'xbmc.ui.screensaver', 'xbmc.player.musicviz',
                       'xbmc.python.pluginsource', 'xbmc.python.script', 'xbmc.python.weather', 'xbmc.python.lyrics',
@@ -27,7 +27,7 @@ common_ignore_deps = ['xbmc.metadata.scraper.albums', 'xbmc.metadata.scraper.mov
                       'kodi.resource.font', 'kodi.inputstream', 'kodi.vfs', 'kodi.imagedecoder', 'xbmc.addon',
                       'xbmc.gui', 'xbmc.json', 'xbmc.metadata', 'xbmc.python', 'script.module.pil']
 
-extensions = {"kodi.gameclient": "kodi.binary.instance.game",
+EXTENSIONS = {"kodi.gameclient": "kodi.binary.instance.game",
               "xbmc.gui.skin": "xbmc.gui",
               "kodi.vfs": "kodi.binary.instance.vfs",
               "xbmc.metadata.scraper.albums": "xbmc.metadata",
@@ -65,32 +65,32 @@ def check_addon_dependencies(report: Report, repo_addons: dict, parsed_xml, bran
     ignore = _get_ignore_list(KodiVersion(branch_name))
 
     for dependency in addon.dependencies:
-        if dependency.id in ignore and not dependency.optional:
+        if dependency.addon_id in ignore and not dependency.optional:
             pass
 
-        elif dependency.id not in repo_addons:
+        elif dependency.addon_id not in repo_addons:
             report.add(Record(INFORMATION if dependency.optional else PROBLEM,
                               "{} dependency {} is not available in current repository"
-                              .format("Optional" if dependency.optional else "Required", dependency.id)))
+                              .format("Optional" if dependency.optional else "Required", dependency.addon_id)))
 
         elif dependency.version is None:
             report.add(Record(INFORMATION if dependency.optional else WARNING,
                               "{} dependency {} does not require a minimum version, available: {}"
-                              .format("Optional" if dependency.optional else "Required", dependency.id,
-                                      repo_addons.find(dependency.id).version)))
+                              .format("Optional" if dependency.optional else "Required", dependency.addon_id,
+                                      repo_addons.find(dependency.addon_id).version)))
 
-        elif repo_addons.find(dependency.id).version < dependency.version:
+        elif repo_addons.find(dependency.addon_id).version < dependency.version:
             report.add(Record(INFORMATION if dependency.optional else PROBLEM,
                               "Version mismatch for {} dependency {}, required: {}, Available: {}"
-                              .format("optional" if dependency.optional else "required", dependency.id,
-                                      dependency.version, repo_addons.find(dependency.id).version)))
+                              .format("optional" if dependency.optional else "required", dependency.addon_id,
+                                      dependency.version, repo_addons.find(dependency.addon_id).version)))
 
-        if dependency.id in VERSION_ATTRB:
+        if dependency.addon_id in VERSION_ATTRB:
             try:
-                version = VERSION_ATTRB[dependency.id][branch_name]
+                version = VERSION_ATTRB[dependency.addon_id][branch_name]
                 if LooseVersion(version) != dependency.version:
                     report.add(Record(WARNING, "For {} it is advised to set {} version to {}"
-                                      .format(branch_name, dependency.id, version)))
+                                      .format(branch_name, dependency.addon_id, version)))
             except KeyError:
                 LOGGER.warning("Misconfiguration in VERSION_ATTRB of check_dependencies")
 
@@ -106,38 +106,39 @@ def check_reverse_dependencies(report: Report, addon: str, branch_name: str, all
       :all_repo_addons: a nested list having information
                         about all the repo addonst
     """
-    addonInRepo = None
+    addon_in_repo = None
     rdepends = []
-    rdependsLowerBranch = []
-    branchFound = False
+    rdepends_lower_branch = []
+    branch_found = False
 
     for branch, repo in sorted(all_repo_addons.items()):
-        if not branchFound and branch != branch_name:
+        if not branch_found and branch != branch_name:
             for rdepend in repo.rdepends(addon):
-                if rdepend not in rdependsLowerBranch:
-                    rdependsLowerBranch.append(rdepend)
+                if rdepend not in rdepends_lower_branch:
+                    rdepends_lower_branch.append(rdepend)
             continue
-        branchFound = True
+        branch_found = True
 
-        addonFind = repo.find(addon)
-        if addonFind and addonInRepo and addonFind != addonInRepo:
+        addon_find = repo.find(addon)
+        if addon_find and addon_in_repo and addon_find != addon_in_repo:
             break
 
-        addonInRepo = addonFind
+        addon_in_repo = addon_find
 
         for rdepend in repo.rdepends(addon):
-            if rdepend not in rdependsLowerBranch and rdepend not in rdepends:
+            if rdepend not in rdepends_lower_branch and rdepend not in rdepends:
                 rdepends.append(rdepend)
-    if addon.startswith("script.module.") and len(rdepends) + len(rdependsLowerBranch) == 0:
+    if addon.startswith("script.module.") and len(rdepends) + len(rdepends_lower_branch) == 0:
         report.add(Record(WARNING, "This module isn't required by any add-on."))
 
     if rdepends:
         report.add(Record(INFORMATION, "Reverse dependencies: {} ({})"
-                          .format(", ".join(sorted([r.id for r in rdepends])), len(rdepends))))
+                          .format(", ".join(sorted([r.addon_id for r in rdepends])), len(rdepends))))
 
-    if rdependsLowerBranch:
+    if rdepends_lower_branch:
         report.add(Record(INFORMATION, "Reverse dependencies (in lower branches): {} ({})"
-                          .format(", ".join(sorted([r.id for r in rdependsLowerBranch])), len(rdependsLowerBranch))))
+                          .format(", ".join(sorted([r.addon_id for r in rdepends_lower_branch])),
+                                  len(rdepends_lower_branch))))
 
 
 def _get_ignore_list(kodi_version: KodiVersion):
@@ -146,12 +147,12 @@ def _get_ignore_list(kodi_version: KodiVersion):
     """
 
     if kodi_version == KodiVersion("leia"):
-        common_ignore_deps.extend(["script.module.pycryptodome"])
+        COMMON_IGNORE_DEPS.extend(["script.module.pycryptodome"])
 
     if kodi_version == KodiVersion("krypton"):
-        common_ignore_deps.extend(["inputstream.adaptive", "inputstream.rtmp"])
+        COMMON_IGNORE_DEPS.extend(["inputstream.adaptive", "inputstream.rtmp"])
 
-    return common_ignore_deps
+    return COMMON_IGNORE_DEPS
 
 
 def _check_extensions(report: Report, parsed_xml, addon):
@@ -160,10 +161,10 @@ def _check_extensions(report: Report, parsed_xml, addon):
 
       :addon: class kodi_addon_checker.addons.Addon.Addon
     """
-    deps = [dependency.id for dependency in addon.dependencies]
+    deps = [dependency.addon_id for dependency in addon.dependencies]
 
     for extension in parsed_xml.findall("extension"):
         point = extension.get("point")
-        if point in extensions and extensions[point] not in deps:
+        if point in EXTENSIONS and EXTENSIONS[point] not in deps:
             report.add(Record(PROBLEM, "{} dependency is required for {} extensions"
-                              .format(extensions[point], point)))
+                              .format(EXTENSIONS[point], point)))
