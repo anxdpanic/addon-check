@@ -122,7 +122,7 @@ def check_addon_dependencies(report: Report, repo_addons: dict, parsed_xml, bran
             pass
 
         elif dependency.id not in repo_addons:
-            report.add(Record(INFORMATION if dependency.optional else PROBLEM,
+            report.add(Record(INFORMATION if dependency.optional else WARNING,
                               "{} dependency {} is not available in current repository"
                               .format("Optional" if dependency.optional else "Required", dependency.id)))
 
